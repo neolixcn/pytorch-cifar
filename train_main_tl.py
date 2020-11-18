@@ -13,12 +13,15 @@ import argparse
 import numpy as np
 
 from models import *
-# from utils import progress_bar
+from utils import progress_bar
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+parser.add_argument('--light_type', default ='q', type=str, help='traffic_light_type q--Quadrate,1:1;h--horizontal,1:3;v--vertical,3:1')
+parser.add_argument('--data_root',type=str,help="data root")
+
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -29,11 +32,21 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 print('==> Preparing data..')
 
 classes = ('red', 'green', 'yellow', 'off', 'others')
-
+if args.light_type == 'q':
+    h=64
+    w=64
+elif args.light_type == 'h':
+    h = 32
+    w=96
+elif args.light_type == 'v':
+    h = 96
+    w = 32
+else:
+    print(" wrong type")
 traffic_light_directory = '/nfs/nas/VOCdevkit/VOC2007_dtld_full/CLS_Images'
-traffic_light_directory = '/home/weiliang/work/data/TL'
+traffic_light_directory = args.data_root
 transform_train = transforms.Compose([
-        transforms.RandomCrop((64,64), padding=4),
+        transforms.RandomCrop((w,h), padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -47,11 +60,11 @@ transform_test = transforms.Compose([
 #
 # result = transform_test(image)
 # print(result)
-trainset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/no_padding/h/train', transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True, num_workers=1)
+trainset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/train', transform=transform_train)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True, num_workers=1)
 # testset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/no_padding/train', transform=transform_test)
-testset = torchvision.datasets.ImageFolder(root='/home/weiliang/work/data/TL/test_shanghai/datatest_front_12_png/resize/five_image', transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=10, shuffle=False, num_workers=1)
+testset = torchvision.datasets.ImageFolder(root=traffic_light_directory +'/test', transform=transform_test)
+testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=1)
 
 print(trainset.class_to_idx)
 
@@ -75,9 +88,9 @@ net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
-args.resume=True
-print(args.resume)
-if 1:
+#args.resume=True
+#print(args.resume)
+if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
@@ -106,13 +119,13 @@ def train(epoch):
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        inputs = inputs.permute(0, 2, 3, 1)
+        #inputs = inputs.permute(0, 2, 3, 1)
         # import pdb;pdb.set_trace()
         optimizer.zero_grad()
 
       
         outputs = net(inputs)
-        print(outputs)
+        # print(outputs)
         outputs = outputs.squeeze(0).squeeze(0)
         loss = criterion(outputs, targets)
         loss.backward()
@@ -135,7 +148,7 @@ def train(epoch):
             predicted_cpu_each_class = correct_cpu
             correct_each_class[i] += sum(np.logical_and(targets_cpu_each_class, predicted_cpu_each_class))
 
-        # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         
     for k, v in trainset.class_to_idx.items():
         print("%10s acc: %.3f"%((k), (correct_each_class[v]/total_each_class[v])))
@@ -157,19 +170,19 @@ def test(epoch):
             #     continue
 
             inputs, targets = inputs.to(device), targets.to(device)
-            print("input")
-            print(inputs.size())
-            print(inputs)
+            #print("input")
+            #print(inputs.size())
+            #print(inputs)
             inputs = inputs.permute(0, 2, 3, 1)
             outputs = net(inputs)
             outputs = outputs.squeeze(0).squeeze(0)
-            print("outputs")
-            print(outputs)
+            #print("outputs")
+            #print(outputs)
             loss = criterion(outputs, targets)
 
             test_loss += loss.item()
             _, predicted = outputs.max(1)
-            print(predicted)
+            #print(predicted)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
