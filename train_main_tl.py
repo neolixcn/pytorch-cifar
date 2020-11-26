@@ -173,7 +173,7 @@ def test(epoch):
             #print("input")
             #print(inputs.size())
             #print(inputs)
-            inputs = inputs.permute(0, 2, 3, 1)
+            #inputs = inputs.permute(0, 2, 3, 1)
             outputs = net(inputs)
             outputs = outputs.squeeze(0).squeeze(0)
             #print("outputs")
@@ -200,28 +200,28 @@ def test(epoch):
 
             #print(correct_each_class)
 
-            # progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-        # for k, v in trainset.class_to_idx.items():
-        #     print("%10s acc: %.3f"%((k), (correct_each_class[v]/total_each_class[v])))
+        for k, v in trainset.class_to_idx.items():
+            print("%10s acc: %.3f"%((k), (correct_each_class[v]/total_each_class[v])))
 
     # Save checkpoint.
-    # acc = 100.*correct/total
-    # if acc > best_acc:
+    acc = 100.*correct/total
+    if acc > best_acc:
     # # if acc > 0:
-    #     print('Saving......')
-    #     state = {
-    #         'net': net.state_dict(),
-    #         'acc': acc,
-    #         'epoch': epoch,
-    #     }
-    #     if not os.path.isdir('checkpoint'):
-    #         os.mkdir('checkpoint')
-    #     torch.save(state, './checkpoint/ckpt.pth')
-    #     best_acc = acc
+        print('Saving......')
+        state = {
+            'net': net.state_dict(),
+            'acc': acc,
+            'epoch': epoch,
+        }
+        if not os.path.isdir('checkpoint'):
+            os.mkdir('checkpoint')
+        torch.save(state, './checkpoint/ckpt.pth')
+        best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+1):
+for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
     test(epoch)
     # scheduler.step()
