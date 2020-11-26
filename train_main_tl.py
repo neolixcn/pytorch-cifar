@@ -119,7 +119,7 @@ def train(epoch):
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        #inputs = inputs.permute(0, 2, 3, 1)
+        inputs = inputs.permute(0, 2, 3, 1)
         # import pdb;pdb.set_trace()
         optimizer.zero_grad()
 
@@ -173,7 +173,7 @@ def test(epoch):
             #print("input")
             #print(inputs.size())
             #print(inputs)
-            #inputs = inputs.permute(0, 2, 3, 1)
+            inputs = inputs.permute(0, 2, 3, 1)
             outputs = net(inputs)
             outputs = outputs.squeeze(0).squeeze(0)
             #print("outputs")
