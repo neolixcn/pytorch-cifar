@@ -1,4 +1,4 @@
-['''Train CIFAR10 with PyTorch.''']
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -21,6 +21,7 @@ parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--light_type', default ='q', type=str, help='traffic_light_type q--Quadrate,1:1;h--horizontal,1:3;v--vertical,3:1')
 parser.add_argument('--data_root',type=str,help="data root")
+parser.add_argument("--weight",type = str,help = "weight path")
 
 args = parser.parse_args()
 
@@ -61,13 +62,13 @@ transform_test = transforms.Compose([
 # result = transform_test(image)
 # print(result)
 print(traffic_light_directory)
-trainset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/train', transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=16, shuffle=True, num_workers=1)
+trainset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/v/train', transform=transform_train)
+# trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=1)
 # testset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/no_padding/train', transform=transform_test)
 testset = torchvision.datasets.ImageFolder(root=traffic_light_directory +'/test', transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=False, num_workers=1)
+testloader = torch.utils.data.DataLoader(testset, batch_size=256, shuffle=False, num_workers=1)
 # import pdb;pdb.set_trace()
-print(trainset.class_to_idx)
+# print(trainset.class_to_idx)
 
 # Model/home/weiliang/work/neolix_perception/output/traffic_light_test_6mm/traffic_roi_generate//home/weiliang/work/neolix_perception/output/traffic_light_test_6mm/traffic_roi_generate/
 print('==> Building model..')
@@ -89,13 +90,13 @@ net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
-#args.resume=True
+args.resume=True
 #print(args.resume)
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt_v.pth')
+    checkpoint = torch.load(args.weight)
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -231,7 +232,7 @@ def test(epoch):
             torch.save(state, f'./checkpoint/ckpt_{epoch}.pth')
 
 
-for epoch in range(start_epoch, start_epoch+200):
-    train(epoch)
+for epoch in range(start_epoch, start_epoch+1):
+    # train(epoch)
     test(epoch)
     # scheduler.step()
