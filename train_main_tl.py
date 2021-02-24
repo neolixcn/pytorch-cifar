@@ -62,10 +62,10 @@ transform_test = transforms.Compose([
 # print(result)
 print(traffic_light_directory)
 trainset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/train', transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=16, shuffle=True, num_workers=1)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=1)
 # testset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/no_padding/train', transform=transform_test)
 testset = torchvision.datasets.ImageFolder(root=traffic_light_directory +'/test', transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=False, num_workers=1)
+testloader = torch.utils.data.DataLoader(testset, batch_size=256, shuffle=False, num_workers=1)
 # import pdb;pdb.set_trace()
 print(trainset.class_to_idx)
 
@@ -119,6 +119,8 @@ def train(epoch):
     correct_each_class=[0, 0, 0, 0, 0]
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
+        if inputs.size(0)<16:
+            continue
         inputs, targets = inputs.to(device), targets.to(device)
         inputs = inputs.permute(0, 2, 3, 1)
         # print(" input size")
@@ -130,6 +132,9 @@ def train(epoch):
         outputs = net(inputs)
         # print(outputs)
         outputs = outputs.squeeze(0).squeeze(0)
+        # print(outputs.shape)
+        # print(targets.shape)
+        # import pdb;pdb.set_trace
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()

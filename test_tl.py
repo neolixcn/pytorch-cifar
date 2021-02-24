@@ -66,7 +66,7 @@ trainset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/v/t
 # trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=1)
 # testset = torchvision.datasets.ImageFolder(root=traffic_light_directory + '/no_padding/train', transform=transform_test)
 testset = torchvision.datasets.ImageFolder(root=traffic_light_directory +'/test', transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=256, shuffle=False, num_workers=1)
+testloader = torch.utils.data.DataLoader(testset, batch_size=2, shuffle=False, num_workers=1)
 # import pdb;pdb.set_trace()
 # print(trainset.class_to_idx)
 
@@ -174,6 +174,7 @@ def test(epoch):
             #     continue
 
             inputs, targets = inputs.to(device), targets.to(device)
+            
             #print("input")
             #print(inputs.size())
             #print(inputs)
@@ -192,6 +193,7 @@ def test(epoch):
 
             targets_cpu = targets.cpu().numpy()
             correct_cpu = predicted.eq(targets).cpu().numpy()
+
             
             for i, c in enumerate(total_each_class):
                 total_each_class[i] += sum(targets_cpu==i)
@@ -211,25 +213,25 @@ def test(epoch):
 
     # Save checkpoint.
     acc = 100.*correct/total
-    if acc > best_acc:
-    # # if acc > 0:
-        print('Saving......')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
-        best_acc = acc
-    if  epoch>150:
-            state = {
-                'net': net.state_dict(),
-                'acc': acc,
-                'epoch': epoch,
-            }
-            torch.save(state, f'./checkpoint/ckpt_{epoch}.pth')
+    # if acc > best_acc:
+    # # # if acc > 0:
+    #     print('Saving......')
+    #     state = {
+    #         'net': net.state_dict(),
+    #         'acc': acc,
+    #         'epoch': epoch,
+    #     }
+    #     if not os.path.isdir('checkpoint'):
+    #         os.mkdir('checkpoint')
+    #     torch.save(state, './checkpoint/ckpt.pth')
+    #     best_acc = acc
+    # if  epoch>150:
+    #         state = {
+    #             'net': net.state_dict(),
+    #             'acc': acc,
+    #             'epoch': epoch,
+    #         }
+    #         torch.save(state, f'./checkpoint/ckpt_{epoch}.pth')
 
 
 for epoch in range(start_epoch, start_epoch+1):
